@@ -4,9 +4,10 @@
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
-use frame_support::pallet_prelude::*;
-use frame_system::pallet_prelude::*;
-use sp_std::prelude::*;
+pub use frame_support::pallet_prelude::*;
+pub use frame_system::pallet_prelude::*;
+pub use sp_std::prelude::*;
+pub use weight::WeightInfo;
 #[cfg(test)]
 mod mock;
 
@@ -15,6 +16,8 @@ mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
+
+pub mod weight;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -31,6 +34,7 @@ pub mod pallet {
 		type MaxClaimLength: Get<u32>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type WeightInfo : WeightInfo;
 	}
 
 	// The pallet's runtime storage items.
@@ -97,7 +101,8 @@ pub mod pallet {
 			// Return a successful DispatchResultWithPostInfo
 			Ok(())
 		}
-		#[pallet::weight(0)]
+		#[pallet::weight(T::WeightInfo::create_claim(claim.len() as u32))]
+		// #[pallet::weight(0)]
 		pub fn create_claim(origin:OriginFor<T>,claim:Vec<u8>) ->DispatchResultWithPostInfo{
 			let sender = ensure_signed(origin)?;
 			let bounded_claim = BoundedVec::<u8,T::MaxClaimLength>::try_from(claim.clone())
@@ -113,7 +118,8 @@ pub mod pallet {
 	
 				Ok(().into())
 		}
-		#[pallet::weight(0)]
+		#[pallet::weight(T::WeightInfo::revoke_claim(claim.len() as u32))]
+		// #[pallet::weight(0)]
 		pub fn revoke_claim(origin: OriginFor<T>, claim: Vec<u8>) -> DispatchResultWithPostInfo {
 			let sender = ensure_signed(origin)?;
 
@@ -130,7 +136,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(T::WeightInfo::transfer_claim(claim.len() as u32))]
+		// #[pallet::weight(0)]
 		pub fn transfer_claim(
 			origin: OriginFor<T>,
 			claim: Vec<u8>,
@@ -151,7 +158,8 @@ pub mod pallet {
 		}
 
 		/// An example dispatchable that may throw a custom error.
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
+		// #[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
+		#[pallet::weight(0)]
 		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
 			let _who = ensure_signed(origin)?;
 
